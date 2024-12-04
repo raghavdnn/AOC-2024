@@ -29,3 +29,7 @@ result
 bin/
 pkg/
 .env
+
+# Input files
+**/input.txt
+
