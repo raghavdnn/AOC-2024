@@ -18,7 +18,7 @@ func main() {
 
 	switch part {
 	case "a":
-		fmt.Println("Total occurrences of XMAS:", countXMAS(grid))
+		fmt.Println("Total occurrences of XMAS:", countWord(grid, "XMAS"))
 	case "b":
 		fmt.Println("Total occurrences of X-MAS:", countXMasPattern(grid))
 	}
@@ -32,7 +32,7 @@ func parseGrid(lines []string) [][]rune {
 	return grid
 }
 
-func countXMAS(grid [][]rune) int {
+func countWord(grid [][]rune, word string) int {
 	rows := len(grid)
 	cols := len(grid[0])
 	count := 0
@@ -51,8 +51,12 @@ func countXMAS(grid [][]rune) int {
 	for r := 0; r < rows; r++ {
 		for c := 0; c < cols; c++ {
 			for _, dir := range directions {
-				if checkWord(grid, r, c, dir[0], dir[1], "XMAS") {
-					count++
+				dr, dc := dir[0], dir[1]
+				// Pre-check bounds based on word length, skip redundant iterations boi
+				if inBounds(grid, r, c) && inBounds(grid, r+(len(word)-1)*dr, c+(len(word)-1)*dc) {
+					if checkWord(grid, r, c, dr, dc, word) {
+						count++
+					}
 				}
 			}
 		}
@@ -64,7 +68,7 @@ func countXMAS(grid [][]rune) int {
 func checkWord(grid [][]rune, r, c, dr, dc int, word string) bool {
 	for i, char := range word {
 		nr, nc := r+i*dr, c+i*dc
-		if nr < 0 || nr >= len(grid) || nc < 0 || nc >= len(grid[0]) || grid[nr][nc] != char {
+		if !inBounds(grid, nr, nc) || grid[nr][nc] != char {
 			return false
 		}
 	}
@@ -72,54 +76,34 @@ func checkWord(grid [][]rune, r, c, dr, dc int, word string) bool {
 }
 
 func countXMasPattern(grid [][]rune) int {
-    rows := len(grid)
-    cols := len(grid[0])
-    count := 0
+	rows := len(grid)
+	cols := len(grid[0])
+	count := 0
 
-    for r := 1; r < rows-1; r++ {
-        for c := 1; c < cols-1; c++ {
-            if isXMasPattern(grid, r, c) {
-                count++
-            }
-        }
-    }
+	for r := 1; r < rows-1; r++ {
+		for c := 1; c < cols-1; c++ {
+			if isXMasPattern(grid, r, c) {
+				count++
+			}
+		}
+	}
 
-    return count
+	return count
 }
-
 
 func isXMasPattern(grid [][]rune, r, c int) bool {
-    // Check that we have enough room for the diagonals
-    if r-1 < 0 || r+1 >= len(grid) || c-1 < 0 || c+1 >= len(grid[0]) {
-        return false
-    }
-
-    // First diagonal: from top-left to bottom-right
-    diag1 := string([]rune{grid[r-1][c-1], grid[r][c], grid[r+1][c+1]})
-    // Second diagonal: from top-right to bottom-left
-    diag2 := string([]rune{grid[r-1][c+1], grid[r][c], grid[r+1][c-1]})
-
-    diag1_match := diag1 == "MAS" || diag1 == "SAM"
-    diag2_match := diag2 == "MAS" || diag2 == "SAM"
-
-    return diag1_match && diag2_match
-}
-
-
-func checkDiagonal(grid [][]rune, r, c, dr1, dc1, dr2, dc2 int) bool {
-	// Top-Left to Bottom-Right diagonal
-	if !inBounds(grid, r+dr1, c+dc1) || !inBounds(grid, r+2*dr1, c+2*dc1) {
+	if !inBounds(grid, r-1, c-1) || !inBounds(grid, r+1, c+1) ||
+		!inBounds(grid, r-1, c+1) || !inBounds(grid, r+1, c-1) {
 		return false
 	}
-	topLeft := string([]rune{grid[r+dr1][c+dc1], grid[r][c], grid[r+dr2][c+dc2]})
 
-	// Top-Right to Bottom-Left diagonal
-	if !inBounds(grid, r+dr2, c+dc2) || !inBounds(grid, r+2*dr2, c+2*dc2) {
-		return false
-	}
-	topRight := string([]rune{grid[r+dr2][c+dc2], grid[r][c], grid[r+dr1][c+dc1]})
+	diag1 := string([]rune{grid[r-1][c-1], grid[r][c], grid[r+1][c+1]})
+	diag2 := string([]rune{grid[r-1][c+1], grid[r][c], grid[r+1][c-1]})
 
-	return (topLeft == "MAS" || topLeft == "SAM") && (topRight == "MAS" || topRight == "SAM")
+	diag1_match := diag1 == "MAS" || diag1 == "SAM"
+	diag2_match := diag2 == "MAS" || diag2 == "SAM"
+
+	return diag1_match && diag2_match
 }
 
 func inBounds(grid [][]rune, r, c int) bool {
