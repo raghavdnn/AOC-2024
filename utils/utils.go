@@ -63,3 +63,24 @@ func ParseIntSlice(parts []string) ([]int, error) {
 func JoinLines(lines []string) string {
 	return strings.Join(lines, "")
 }
+
+func SplitByEmptyLines(lines []string) [][]string {
+    var sections [][]string
+    start := 0
+
+    for i, line := range lines {
+        if line == "" {
+            if start < i {
+                sections = append(sections, lines[start:i])
+            }
+            start = i + 1
+        }
+    }
+
+    if start < len(lines) {
+        sections = append(sections, lines[start:])
+    }
+
+    return sections
+}
+
